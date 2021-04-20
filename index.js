@@ -36,7 +36,7 @@ bot.on('ready', () => {
       if (currentMembers.get(userId) && !inside){
         inside = true
         insideHour = new Date()      
-        currentUser = currentMembers.get(userId).nickname
+        currentUser = currentMembers.get(userId).user.username
 
       } else if( !currentMembers.get(userId) && inside) {
         inside = false
