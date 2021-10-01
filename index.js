@@ -22,7 +22,6 @@ function millisToMinutesAndSeconds(millis) {
   return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
 }
 
-
 loginBot()
 
 bot.on('ready', () => {
@@ -38,7 +37,7 @@ bot.on('ready', () => {
         insideHour = new Date()      
         currentUser = currentMembers.get(userId).user.username
 
-      } else if( !currentMembers.get(userId) && inside) {
+      } else if(!currentMembers.get(userId) && inside) {
         inside = false
         const aux = new Date()
         const timeInside = aux.getTime() - insideHour.getTime()
