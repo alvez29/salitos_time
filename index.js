@@ -1,19 +1,19 @@
 require('dotenv').config();
-const Discord = require('discord.js');
-const bot = new Discord.Client();
 
-const TOKEN = process.env.BOT_TOKEN;
+const { Client, GatewayIntentBits } = require('discord.js');
+
+const TOKEN = process.env.BOT_TOKEN
+const USER_ID = process.env.USER_ID
+const VOICE_CHANNEL_ID = process.env.VOICE_CHANNEL_ID
+const TEXT_CHANNEL_ID = process.env.TEXT_CHANNEL_ID
+const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates]})
+
 var inside = false
 var insideHour = null
-var userId = process.env.USER_ID
-var voiceChannelId = process.env.VOICE_CHANNEL_ID
-var textChannelId = process.env.TEXT_CHANNEL_ID
-var currentUser = ''
 var register = []
 
-
-function loginBot(){
-  bot.login(TOKEN);
+function loginBot() {
+  client.login(TOKEN);
 }
 
 function millisToMinutesAndSeconds(millis) {
@@ -22,40 +22,74 @@ function millisToMinutesAndSeconds(millis) {
   return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
 }
 
-loginBot()
+function registerEnter() {
+  inside = true
+  insideHour = new Date()
+}
 
-bot.on('ready', () => {
-    const voiceChannel = bot.channels.valueOf().get(voiceChannelId)
-    const textChannel = bot.channels.valueOf().get(textChannelId)
-  
-    setInterval(function() {
-      const currentMembers = voiceChannel.members
-      const initialSize = register.length
+function registerExit(textChannelId) {
+  inside = false
+  const aux = new Date()
+  const timeInside = aux.getTime() - insideHour.getTime()
+  register = [...register, timeInside]
+  insideHour = null
+  sendMessageToTextChannel(textChannelId)
+}
 
-      if (currentMembers.get(userId) && !inside){
-        inside = true
-        insideHour = new Date()      
-        currentUser = currentMembers.get(userId).user.username
+function sendMessageToTextChannel(textChannelId) {
+  const textChannel = client.channels.cache.get(TEXT_CHANNEL_ID)
+  const currentUser = client.users.cache.get(USER_ID).username
 
-      } else if(!currentMembers.get(userId) && inside) {
-        inside = false
-        const aux = new Date()
-        const timeInside = aux.getTime() - insideHour.getTime()
-        register = [...register, timeInside]
-        insideHour = null
-      }
+  textChannel.send(currentUser + ' ha estado ' + millisToMinutesAndSeconds(register[register.length-1]) + " en Salitos time")
+  register = []
+}
 
-      if (register.length != initialSize) {
-        textChannel.send(currentUser + ' ha estado ' + millisToMinutesAndSeconds(register[register.length-1]) + " en Salitos time")
-        register = []
-        currentUser = ''
-      }
+function userHasSwitchedToChannel() {
+  return oldState.channelId != null && newState.channelId != null && newState.channelId != oldState.channelId && newState.channelId === VOICE_CHANNEL_ID
+}
 
-    }, 1000);
+function userHasSwitchedFromChannel() {
+  return oldState.channelId != null && newState.channelId != null && newState.channelId != oldState.channelId && oldState.channelId === VOICE_CHANNEL_ID
+}
 
+function userJoinedChannel() {
+  return oldState.channelId === null && newState.channelId === VOICE_CHANNEL_ID
+}
+
+function userLeftChannel() {
+  return newState.channelId === null && oldState.channelId === VOICE_CHANNEL_ID
+}
+
+function isNotCorrespondingUser() {
+  oldState.member.id !== USER_ID || newState.member.id !== USER_ID
+}
+
+client.on('voiceStateUpdate', async (oldState, newState) => {
+  if (isNotCorrespondingUser()) {
+    return
+  }
+
+  if (userHasSwitchedToChannel()) {
+    registerEnter()
+    console.log('User switched to channel!')
+  }
+
+  if (userHasSwitchedFromChannel()) {
+    registerExit(TEXT_CHANNEL_ID)
+    console.log('User switched from channel!')
+  }
+
+  if (userJoinedChannel()) {
+    registerEnter()
+    console.log('User joined channel!')
+  }
+
+  if (userLeftChannel()) {
+    registerExit(TEXT_CHANNEL_ID)
+    console.log('User left channel!')
+  }
 });
 
+loginBot()
 
-
-exports.client = bot
-exports.loginBot = loginBot
+exports.client = client
