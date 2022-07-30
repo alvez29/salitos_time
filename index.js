@@ -44,47 +44,47 @@ function sendMessageToTextChannel(textChannelId) {
   register = []
 }
 
-function userHasSwitchedToChannel() {
+function userHasSwitchedToChannel(oldState, newState) {
   return oldState.channelId != null && newState.channelId != null && newState.channelId != oldState.channelId && newState.channelId === VOICE_CHANNEL_ID
 }
 
-function userHasSwitchedFromChannel() {
+function userHasSwitchedFromChannel(oldState, newState) {
   return oldState.channelId != null && newState.channelId != null && newState.channelId != oldState.channelId && oldState.channelId === VOICE_CHANNEL_ID
 }
 
-function userJoinedChannel() {
+function userJoinedChannel(oldState, newState) {
   return oldState.channelId === null && newState.channelId === VOICE_CHANNEL_ID
 }
 
-function userLeftChannel() {
+function userLeftChannel(oldState, newState) {
   return newState.channelId === null && oldState.channelId === VOICE_CHANNEL_ID
 }
 
-function isNotCorrespondingUser() {
+function isNotCorrespondingUser(oldState, newState) {
   oldState.member.id !== USER_ID || newState.member.id !== USER_ID
 }
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
-  if (isNotCorrespondingUser()) {
+  if (isNotCorrespondingUser(oldState, newState)) {
     return
   }
 
-  if (userHasSwitchedToChannel()) {
+  if (userHasSwitchedToChannel(oldState, newState)) {
     registerEnter()
     console.log('User switched to channel!')
   }
 
-  if (userHasSwitchedFromChannel()) {
+  if (userHasSwitchedFromChannel(oldState, newState)) {
     registerExit(TEXT_CHANNEL_ID)
     console.log('User switched from channel!')
   }
 
-  if (userJoinedChannel()) {
+  if (userJoinedChannel(oldState, newState)) {
     registerEnter()
     console.log('User joined channel!')
   }
 
-  if (userLeftChannel()) {
+  if (userLeftChannel(oldState, newState)) {
     registerExit(TEXT_CHANNEL_ID)
     console.log('User left channel!')
   }
