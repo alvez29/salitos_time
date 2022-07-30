@@ -37,7 +37,7 @@ function registerExit(textChannelId) {
 }
 
 function sendMessageToTextChannel(textChannelId) {
-  const textChannel = client.channels.cache.get(TEXT_CHANNEL_ID)
+  const textChannel = client.channels.cache.get(textChannelId)
   const currentUser = client.users.cache.get(USER_ID).username
 
   textChannel.send(currentUser + ' ha estado ' + millisToMinutesAndSeconds(register[register.length-1]) + " en Salitos time")
@@ -88,6 +88,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     registerExit(TEXT_CHANNEL_ID)
     console.log('User left channel!')
   }
+
 });
 
 loginBot()
