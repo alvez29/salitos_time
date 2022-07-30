@@ -8,8 +8,8 @@ const VOICE_CHANNEL_ID = process.env.VOICE_CHANNEL_ID
 const TEXT_CHANNEL_ID = process.env.TEXT_CHANNEL_ID
 const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates]})
 
-var inside = false
-var insideHour = null
+var isInside = false
+var enterHour = null
 var register = []
 
 function loginBot() {
@@ -23,16 +23,16 @@ function millisToMinutesAndSeconds(millis) {
 }
 
 function registerEnter() {
-  inside = true
-  insideHour = new Date()
+  isInside = true
+  enterHour = new Date()
 }
 
 function registerExit(textChannelId) {
-  inside = false
-  const aux = new Date()
-  const timeInside = aux.getTime() - insideHour.getTime()
+  isInside = false
+  const now = new Date()
+  const timeInside = now.getTime() - enterHour.getTime()
   register = [...register, timeInside]
-  insideHour = null
+  enterHour = null
   sendMessageToTextChannel(textChannelId)
 }
 
